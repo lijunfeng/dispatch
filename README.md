@@ -1,4 +1,5 @@
-# Dispatch
+Dispatch [![Build Status](https://drone.io/github.com/tango-contrib/dispatch/status.png)](https://drone.io/github.com/tango-contrib/dispatch/latest) [![](http://gocover.io/_badge/github.com/tango-contrib/dispatch)](http://gocover.io/github.com/tango-contrib/dispatch)
+======
 
 Dispacth is a handler for dipatch http request according url's prefix.
 
