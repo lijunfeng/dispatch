@@ -1,14 +1,14 @@
 package dispatch
 
 import (
+	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"bytes"
 	"testing"
 
-	"github.com/lunny/tango"
 	"github.com/lunny/log"
+	"github.com/lunny/tango"
 )
 
 func TestDispatch(t *testing.T) {
@@ -19,18 +19,18 @@ func TestDispatch(t *testing.T) {
 	l := log.Std
 	l.SetOutputLevel(log.Ldebug)
 
-	t1 := tango.NewWithLog(l)
-	t1.UseHandler(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+	t1 := tango.NewWithLog(l, tango.Logging())
+	t1.Get("/", func(res http.ResponseWriter, req *http.Request) {
 		res.Write([]byte("tango 1"))
-	}))
+	})
 
-	t2 := tango.NewWithLog(l)
-	t2.UseHandler(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+	t2 := tango.NewWithLog(l, tango.Logging())
+	t2.Get("/", func(res http.ResponseWriter, req *http.Request) {
 		res.Write([]byte("tango 2"))
-	}))
+	})
 
 	dispatch := New(map[string]*tango.Tango{
-		"/": t1,
+		"/":     t1,
 		"/api/": t2,
 	})
 

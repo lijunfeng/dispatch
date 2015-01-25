@@ -1,46 +1,68 @@
 package dispatch
 
 import (
+	"path"
+	"sort"
 	"strings"
-	"net/http"
 
 	"github.com/lunny/tango"
 )
 
-type Dispatch struct {
-	logger tango.Logger
-	tangos map[string]*tango.Tango
+type mTango struct {
+	route string
+	tg    *tango.Tango
+}
+
+type Dispatch []*mTango
+
+func (d *Dispatch) Len() int {
+	return len(*d)
+}
+
+func (d *Dispatch) Less(i, j int) bool {
+	return len((*d)[i].route) > len((*d)[j].route)
+}
+
+func (d *Dispatch) Swap(i, j int) {
+	(*d)[i], (*d)[j] = (*d)[j], (*d)[i]
 }
 
 func New(m map[string]*tango.Tango) *Dispatch {
-	if m != nil {
-		return &Dispatch{tangos: m}
+	var dispatch Dispatch = make([]*mTango, 0)
+	if m == nil {
+		m = make(map[string]*tango.Tango)
 	}
-	return &Dispatch{tangos: make(map[string]*tango.Tango)}
+	for k, t := range m {
+		dispatch = append(dispatch, &mTango{
+			route: k,
+			tg:    t,
+		})
+	}
+	sort.Sort(&dispatch)
+	return &dispatch
 }
 
 func (d *Dispatch) Add(name string, t *tango.Tango) {
-	d.tangos[name] = t
-}
-
-func (d *Dispatch) SetLogger(logger tango.Logger) {
-	d.logger = logger
+	*d = append(*d, &mTango{
+		route: name,
+		tg:    t,
+	})
+	sort.Sort(d)
 }
 
 func (d *Dispatch) Handle(ctx *tango.Context) {
-	fields := strings.Split(ctx.Req().URL.Path, "/")
-	if len(fields) == 2 {
-		if t, ok := d.tangos["/"]; ok {
-			t.ServeHTTP(ctx.ResponseWriter, ctx.Req())
-			return
-		}
-	} else {
-		if t, ok := d.tangos[strings.Join(fields[0:2], "/")+"/"]; ok {
-			t.ServeHTTP(ctx.ResponseWriter, ctx.Req())
-			return
+	var tg *mTango
+	for _, t := range *d {
+		if strings.HasPrefix(ctx.Req().URL.Path, t.route) {
+			tg = t
+			break
 		}
 	}
 
-	ctx.WriteHeader(http.StatusNotFound)
-	ctx.Write([]byte("Not Found"))
+	if tg != nil {
+		ctx.Req().URL.Path = path.Join("/", strings.TrimLeft(ctx.Req().URL.Path, tg.route))
+		tg.tg.ServeHTTP(ctx.ResponseWriter, ctx.Req())
+	} else {
+		ctx.NotFound()
+	}
 }
