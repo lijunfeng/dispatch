@@ -30,9 +30,9 @@ func TestDispatch(t *testing.T) {
 	})
 
 	dispatch := New(map[string]*tango.Tango{
-		"/":     t1,
-		"/api/": t2,
+		"/": t1,
 	})
+	dispatch.Add("/api/", t2)
 
 	t3 := tango.NewWithLog(l)
 	t3.Use(dispatch)
