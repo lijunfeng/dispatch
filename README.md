@@ -44,16 +44,20 @@ func main() {
     t.Any("/favicon.ico", func(self *tango.Context) {
         self.Redirect("/static/favicon.ico", 301)
     })
+    t.Any("/", func() string {
+        return "Hello Tango!"
+    })
 
     m := macaron.Classic()
-    m.Get("/m/", func(ctx *macaron.Context) string {
+    m.Get("/", func(ctx *macaron.Context) string {
         return "Macaron on Tango!"
     })
 
-    macaron := dispatch.Use("/", m)
+    dispatch := dispatch.Use("/", t)
+    dispatch.Add("/m/", m)
 
-    t.Use(macaron)
-
-    t.Run(80)
+    tan := tango.Classic()
+    tan.Use(dispatch)
+    tan.Run(80)
 }
 ```
