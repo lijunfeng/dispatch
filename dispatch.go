@@ -7,7 +7,10 @@ import (
 	"strings"
 
 	"github.com/lunny/tango"
+	//"sza/libraries/try"
 )
+
+type Handler http.Handler
 
 type mTango struct {
 	route string
@@ -28,10 +31,10 @@ func (d *Dispatch) Swap(i, j int) {
 	(*d)[i], (*d)[j] = (*d)[j], (*d)[i]
 }
 
-func New(m map[string]http.Handler) *Dispatch {
+func New(m map[string]Handler) *Dispatch {
 	var dispatch Dispatch = make([]*mTango, 0)
 	if m == nil {
-		m = make(map[string]http.Handler)
+		m = make(map[string]Handler)
 	}
 	for k, t := range m {
 		dispatch = append(dispatch, &mTango{
@@ -66,4 +69,16 @@ func (d *Dispatch) Handle(ctx *tango.Context) {
 	} else {
 		ctx.NotFound()
 	}
+}
+
+func Use(name string, t http.Handler) (dispatch *Dispatch) {
+
+	if dispatch != nil {
+		dispatch.Add(name, t)
+	} else {
+		dispatch = New(map[string]Handler{
+			name: t,
+		})
+	}
+	return dispatch
 }

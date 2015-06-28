@@ -30,7 +30,7 @@ func TestDispatch(t *testing.T) {
 		res.Write([]byte("tango 2"))
 	})
 
-	dispatch := New(map[string]http.Handler{
+	dispatch := New(map[string]Handler{
 		"/": t1,
 	})
 	dispatch.Add("/api/", t2)
@@ -74,15 +74,15 @@ func TestDispatch2(t *testing.T) {
 		res.Write([]byte("tango 1"))
 	})
 
-	t2 := macaron.Classic()
-	t2.Get("/", func(ctx *macaron.Context) string {
-		return "tango 2"
+	m := macaron.Classic()
+	m.Get("/", func(ctx *macaron.Context) string {
+		return "macaron"
 	})
 
-	dispatch := New(map[string]http.Handler{
+	dispatch := New(map[string]Handler{
 		"/": t1,
 	})
-	dispatch.Add("/api/", t2)
+	dispatch.Add("/api/", m)
 
 	t3 := tango.NewWithLog(l)
 	t3.Use(dispatch)
@@ -107,7 +107,7 @@ func TestDispatch2(t *testing.T) {
 	t3.ServeHTTP(recorder, req)
 	expect(t, recorder.Code, http.StatusOK)
 	refute(t, len(buff.String()), 0)
-	expect(t, buff.String(), "tango 2")
+	expect(t, buff.String(), "macaron")
 }
 
 /* Test Helpers */

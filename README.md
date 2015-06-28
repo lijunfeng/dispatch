@@ -26,3 +26,34 @@ func main() {
     t3.Run(":8000")
 }
 ```
+
+
+```Go
+package main
+
+import (
+    "github.com/Unknwon/macaron"
+    "github.com/lunny/tango"
+    "github.com/tango-contrib/dispatch"
+)
+
+func main() {
+
+    t := tango.Classic()
+
+    t.Any("/favicon.ico", func(self *tango.Context) {
+        self.Redirect("/static/favicon.ico", 301)
+    })
+
+    m := macaron.Classic()
+    m.Get("/m/", func(ctx *macaron.Context) string {
+        return "Macaron on Tango!"
+    })
+
+    macaron := dispatch.Use("/", m)
+
+    t.Use(macaron)
+
+    t.Run(80)
+}
+```
