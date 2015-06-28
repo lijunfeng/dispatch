@@ -1,6 +1,7 @@
 package dispatch
 
 import (
+	"net/http"
 	"path"
 	"sort"
 	"strings"
@@ -10,7 +11,7 @@ import (
 
 type mTango struct {
 	route string
-	tg    *tango.Tango
+	tg    http.Handler
 }
 
 type Dispatch []*mTango
@@ -27,10 +28,10 @@ func (d *Dispatch) Swap(i, j int) {
 	(*d)[i], (*d)[j] = (*d)[j], (*d)[i]
 }
 
-func New(m map[string]*tango.Tango) *Dispatch {
+func New(m map[string]http.Handler) *Dispatch {
 	var dispatch Dispatch = make([]*mTango, 0)
 	if m == nil {
-		m = make(map[string]*tango.Tango)
+		m = make(map[string]http.Handler)
 	}
 	for k, t := range m {
 		dispatch = append(dispatch, &mTango{
@@ -42,7 +43,7 @@ func New(m map[string]*tango.Tango) *Dispatch {
 	return &dispatch
 }
 
-func (d *Dispatch) Add(name string, t *tango.Tango) {
+func (d *Dispatch) Add(name string, t http.Handler) {
 	*d = append(*d, &mTango{
 		route: name,
 		tg:    t,
